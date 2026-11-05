@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giải mã trang trại công nghệ cao</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",Roboto,Arial,sans-serif;background:#071a33;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:12px}
+.frame{width:min(1100px,100%);background:linear-gradient(160deg,#0b2545,#13315c 60%,#0e4d64);border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.5);overflow:hidden;min-height:600px;display:flex;flex-direction:column}
+.screen{display:none;flex:1;flex-direction:column;padding:24px;gap:14px}
+.screen.active{display:flex}
+h1{font-size:clamp(26px,4vw,44px);color:#38c6e0;letter-spacing:1px;line-height:1.15}
+h2{font-size:clamp(18px,2.4vw,26px);color:#fff}
+h3{font-size:16px;color:#38c6e0;margin-bottom:6px}
+p,li{font-size:clamp(14px,1.7vw,17px);line-height:1.55}
+ul{padding-left:20px}
+.btn{border:none;border-radius:10px;padding:12px 22px;font-size:16px;font-weight:700;cursor:pointer;background:#ff9f1c;color:#1a1a1a;box-shadow:0 4px 0 #c96f00}
+.btn:active{transform:translateY(3px);box-shadow:none}
+.btn.alt{background:#2e9e5b;color:#fff;box-shadow:0 4px 0 #1d6b3c}
+.btn.ghost{background:transparent;color:#38c6e0;border:2px solid #38c6e0;box-shadow:none}
+.hidden{display:none !important}
+.intro{display:flex;flex-wrap:wrap;gap:20px;align-items:center;flex:1}
+.intro .txt{flex:1 1 320px;display:flex;flex-direction:column;gap:12px}
+.intro .art{flex:1 1 360px;max-width:560px}
+.intro svg{width:100%;height:auto;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.hud{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
+.stat{background:rgba(255,255,255,.1);border-radius:10px;padding:8px 14px;font-weight:700}
+.stat span{color:#ff9f1c;font-size:20px}
+.progress{height:12px;background:rgba(255,255,255,.15);border-radius:8px;overflow:hidden}
+.progress>div{height:100%;width:0;background:linear-gradient(90deg,#38c6e0,#2e9e5b);transition:width .4s}
+.ptext{font-size:14px;color:#cfe9f5}
+.pieces{display:flex;gap:8px;flex-wrap:wrap}
+.piece{flex:1 1 180px;border:2px dashed rgba(255,255,255,.3);border-radius:10px;padding:8px;font-size:13px;color:#9fb8c9;text-align:center}
+.piece.got{border:2px solid #38c6e0;background:rgba(56,198,224,.18);color:#fff;font-weight:700}
+.stage-head{background:rgba(0,0,0,.25);border-radius:12px;padding:12px 16px}
+.tag{color:#ff9f1c;font-weight:700;font-size:13px;letter-spacing:1px}
+.situation{margin-top:4px;font-size:15px}
+.hint{font-size:13px;color:#9fd8e8;margin-top:6px;font-style:italic}
+#content{display:flex;flex-direction:column;gap:14px}
+.locked{pointer-events:none;opacity:.9}
+.card,.slot,.opt{font-family:inherit;color:#0b2545;background:#f4fbff;border:2px solid #cfe6f2;border-radius:10px;padding:10px 12px;font-size:15px;text-align:left;cursor:pointer;display:flex;gap:8px;align-items:flex-start}
+.card:hover,.opt:hover{border-color:#38c6e0}
+.card.sel{border-color:#ff9f1c;background:#fff4e0;box-shadow:0 0 0 3px rgba(255,159,28,.35)}
+.row,.zrow,.slots{display:flex;flex-wrap:wrap;gap:8px;min-height:50px}
+.card b{color:#13315c}
+.label{font-size:13px;color:#cfe9f5;margin-bottom:4px}
+.slots{gap:8px}
+.slot{min-height:52px;min-width:150px;flex:1 1 150px;background:rgba(255,255,255,.07);border:2px dashed rgba(255,255,255,.35);color:#fff;align-items:center}
+.slot.filled{background:#e6f7ff;border:2px solid #38c6e0;color:#0b2545;border-style:solid}
+.num{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;border-radius:50%;background:#13315c;color:#fff;font-size:13px;font-weight:700;flex-shrink:0}
+.zones{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.zone{background:rgba(56,198,224,.12);border:2px solid rgba(56,198,224,.5);border-radius:12px;padding:12px;cursor:pointer;min-height:120px}
+.zone:hover{background:rgba(56,198,224,.22)}
+.zone h3{color:#fff}
+.zone .zrow{min-height:60px}
+.zone .card{font-size:14px;padding:8px}
+.cap{font-size:12px;color:#cfe9f5;margin-top:6px}
+.q{background:rgba(0,0,0,.25);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.qtext{font-weight:700;font-size:16px}
+.opt{background:#fff;color:#0b2545}
+.opt.sel{border-color:#ff9f1c;background:#fff4e0}
+.fb{min-height:48px;border-radius:10px;padding:12px 14px;font-size:15px;line-height:1.5;display:none}
+.fb.show{display:block}
+.fb.ok{background:rgba(46,158,91,.25);border:2px solid #2e9e5b}
+.fb.bad{background:rgba(255,80,80,.18);border:2px solid #ff6b6b}
+.fb.info{background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.3)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:auto}
+.tree{background:#fff;color:#0b2545;border-radius:12px;padding:18px;font-family:Consolas,monospace;font-size:clamp(13px,1.6vw,16px);line-height:1.8;white-space:pre-wrap}
+.tree b{color:#0e7490}
+.big{font-size:clamp(20px,3vw,30px);font-weight:800;color:#ff9f1c;text-align:center}
+.center{align-items:center;text-align:center;justify-content:center}
+.score-big{font-size:48px;font-weight:900;color:#38c6e0}
+@media (max-width:600px){.screen{padding:16px}.piece{flex-basis:100%}}
+</style>
+</head>
+<body>
+<div class="frame">
+
+<!-- MÀN HÌNH 1: GIỚI THIỆU -->
+<section id="s-intro" class="screen active">
+  <div class="intro">
+    <div class="txt">
+      <h1>GIẢI MÃ TRANG TRẠI CÔNG NGHỆ CAO</h1>
+      <p><b>Hồ sơ trang trại đã bị xáo trộn!</b> Ba mô hình chăn nuôi công nghệ cao đang chờ được giải mã. Hãy vận dụng kiến thức đã học, vượt qua các thử thách và khôi phục bản đồ công nghệ của trang trại!</p>
+      <h2>Luật chơi</h2>
+      <ul>
+        <li>Có 3 thử thách chính và 1 nhiệm vụ tổng kết.</li>
+        <li>Hoàn thành mỗi thử thách để nhận một mảnh ghép.</li>
+        <li>Trả lời đúng được cộng điểm; chọn sai không được cộng điểm.</li>
+        <li>Hoàn thành nhiệm vụ cuối để khôi phục bản đồ trang trại.</li>
+      </ul>
+      <div><button class="btn" id="btnStart">BẮT ĐẦU</button></div>
+    </div>
+    <div class="art">
+      <svg viewBox="0 0 560 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Trang trại công nghệ cao có gà, bò, cừu và lợn">
+        <defs>
+          <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#4fc3e6"/><stop offset="1" stop-color="#d4f3ff"/>
+          </linearGradient>
+          <linearGradient id="gHill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#9fd98a"/><stop offset="1" stop-color="#6fb86a"/>
+          </linearGradient>
+          <linearGradient id="gGround" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#7cc46d"/><stop offset="1" stop-color="#3f8a45"/>
+          </linearGradient>
+          <linearGradient id="gWall" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f6eedf"/><stop offset="1" stop-color="#d8c7a4"/>
+          </linearGradient>
+          <linearGradient id="gRoof" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#e5604f"/><stop offset="1" stop-color="#a93129"/>
+          </linearGradient>
+          <linearGradient id="gHen" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#e3a25a"/><stop offset="1" stop-color="#9a5a25"/>
+          </linearGradient>
+          <linearGradient id="gPig" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fbc4cc"/><stop offset="1" stop-color="#e58b9b"/>
+          </linearGradient>
+          <linearGradient id="gWool" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dcd8cc"/>
+          </linearGradient>
+          <radialGradient id="gSun" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stop-color="#fff6c2"/><stop offset="1" stop-color="#ffd166" stop-opacity="0"/>
+          </radialGradient>
+          <clipPath id="cowBody"><ellipse cx="368" cy="250" rx="66" ry="40"/></clipPath>
+        </defs>
+
+        <!-- Bầu trời & nền -->
+        <rect width="560" height="400" fill="url(#gSky)"/>
+        <circle cx="492" cy="62" r="60" fill="url(#gSun)"/>
+        <circle cx="492" cy="62" r="24" fill="#ffe27a"/>
+        <path d="M0 215 Q120 165 250 205 T560 190 L560 400 L0 400Z" fill="url(#gHill)"/>
+        <path d="M0 290 Q280 250 560 285 L560 400 L0 400Z" fill="url(#gGround)"/>
+
+        <!-- Tháp chuồng -->
+        <rect x="128" y="118" width="134" height="232" fill="url(#gWall)" stroke="#6b4b2e" stroke-width="3"/>
+        <g stroke="#c9b48e" stroke-width="1" opacity=".6">
+          <line x1="128" y1="150" x2="262" y2="150"/><line x1="128" y1="182" x2="262" y2="182"/>
+          <line x1="128" y1="214" x2="262" y2="214"/><line x1="128" y1="246" x2="262" y2="246"/>
+          <line x1="128" y1="278" x2="262" y2="278"/><line x1="128" y1="310" x2="262" y2="310"/>
+        </g>
+        <polygon points="110,128 195,42 280,128" fill="url(#gRoof)" stroke="#7a2a24" stroke-width="3"/>
+        <g stroke="#7a2a24" stroke-width="1" opacity=".5">
+          <line x1="130" y1="112" x2="260" y2="112"/><line x1="150" y1="96" x2="240" y2="96"/><line x1="170" y1="78" x2="220" y2="78"/>
+        </g>
+        <rect x="176" y="62" width="38" height="34" fill="#bfe9f5" stroke="#5a3d25" stroke-width="3"/>
+        <line x1="195" y1="62" x2="195" y2="96" stroke="#5a3d25" stroke-width="2"/>
+        <line x1="176" y1="79" x2="214" y2="79" stroke="#5a3d25" stroke-width="2"/>
+        <!-- Cửa sổ & ban công -->
+        <g fill="#bfe9f5" stroke="#5a3d25" stroke-width="2.5">
+          <rect x="216" y="152" width="24" height="26"/>
+          <rect x="216" y="200" width="24" height="26"/>
+          <rect x="216" y="248" width="24" height="26"/>
+        </g>
+        <rect x="136" y="170" width="78" height="8" fill="#8a5a3b"/>
+        <g fill="#8a5a3b">
+          <rect x="142" y="178" width="4" height="34"/><rect x="156" y="178" width="4" height="34"/>
+          <rect x="170" y="178" width="4" height="34"/><rect x="184" y="178" width="4" height="34"/>
+          <rect x="198" y="178" width="4" height="34"/>
+        </g>
+        <!-- Cửa vòm -->
+        <path d="M160 350 L160 300 Q160 268 191 268 Q222 268 222 300 L222 350Z" fill="#8a5a3b" stroke="#4e3320" stroke-width="3"/>
+        <line x1="191" y1="270" x2="191" y2="350" stroke="#4e3320" stroke-width="2"/>
+        <!-- Nút cảm biến (công nghệ) -->
+        <g stroke="#38c6e0" stroke-width="2" fill="#0b2545">
+          <line x1="128" y1="160" x2="92" y2="140"/><circle cx="92" cy="140" r="6"/>
+          <line x1="262" y1="230" x2="300" y2="200"/><circle cx="300" cy="200" r="6"/>
+          <line x1="128" y1="300" x2="98" y2="282"/><circle cx="98" cy="282" r="6"/>
+        </g>
+
+        <!-- Hàng rào bên trái & phải -->
+        <g fill="#c58a4c" stroke="#7a4e2d" stroke-width="2">
+          <rect x="0" y="236" width="118" height="10" rx="3"/><rect x="0" y="262" width="118" height="10" rx="3"/>
+          <rect x="8" y="222" width="12" height="92" rx="2"/><rect x="48" y="222" width="12" height="92" rx="2"/>
+          <rect x="88" y="222" width="12" height="92" rx="2"/>
+          <rect x="322" y="214" width="238" height="10" rx="3"/><rect x="322" y="240" width="238" height="10" rx="3"/>
+          <rect x="330" y="200" width="12" height="90" rx="2"/><rect x="370" y="200" width="12" height="90" rx="2"/>
+          <rect x="410" y="200" width="12" height="90" rx="2"/><rect x="450" y="200" width="12" height="90" rx="2"/>
+          <rect x="490" y="200" width="12" height="90" rx="2"/><rect x="530" y="200" width="12" height="90" rx="2"/>
+        </g>
+
+        <!-- GÀ -->
+        <ellipse cx="72" cy="362" rx="30" ry="6" fill="#000" opacity=".2"/>
+        <path d="M46 318 Q22 296 30 268 Q44 282 52 300 Z" fill="#7a4418"/>
+        <path d="M48 306 Q28 290 36 276 Q46 288 54 300 Z" fill="#b8702f"/>
+        <ellipse cx="72" cy="326" rx="30" ry="22" fill="url(#gHen)" stroke="#6d3e18" stroke-width="2"/>
+        <path d="M52 322 Q70 304 92 324 Q74 338 52 322 Z" fill="#7a4418" opacity=".85"/>
+        <path d="M58 326 Q68 316 82 326" fill="none" stroke="#f3d7a6" stroke-width="1.5" opacity=".7"/>
+        <path d="M66 346 L62 360 M76 346 L80 360" stroke="#e8a52e" stroke-width="3" stroke-linecap="round"/>
+        <path d="M62 360 l-8 2 M62 360 l2 3 M62 360 l-4 -3 M80 360 l-8 2 M80 360 l2 3 M80 360 l-4 -3" stroke="#e8a52e" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="98" cy="298" r="15" fill="url(#gHen)" stroke="#6d3e18" stroke-width="2"/>
+        <circle cx="94" cy="284" r="4.5" fill="#d7261e"/>
+        <circle cx="101" cy="281" r="4.5" fill="#d7261e"/>
+        <circle cx="107" cy="285" r="3.5" fill="#d7261e"/>
+        <path d="M108 300 Q114 309 105 311 Q104 304 108 300 Z" fill="#d7261e"/>
+        <path d="M110 293 L123 298 L110 303 Z" fill="#f5b000" stroke="#c98a00" stroke-width="1"/>
+        <circle cx="101" cy="294" r="3" fill="#111"/>
+        <circle cx="102" cy="293" r="1" fill="#fff"/>
+
+        <!-- BÒ SỮA (Holstein đen trắng) -->
+        <ellipse cx="368" cy="362" rx="72" ry="7" fill="#000" opacity=".2"/>
+        <g stroke="#555" stroke-width="1.5">
+          <rect x="332" y="282" width="12" height="62" rx="4" fill="#fbfbf8"/>
+          <rect x="350" y="282" width="12" height="62" rx="4" fill="#fbfbf8"/>
+          <rect x="390" y="282" width="12" height="62" rx="4" fill="#fbfbf8"/>
+          <rect x="408" y="282" width="12" height="62" rx="4" fill="#fbfbf8"/>
+        </g>
+        <rect x="332" y="336" width="12" height="8" fill="#2a2a2a"/><rect x="350" y="336" width="12" height="8" fill="#2a2a2a"/>
+        <rect x="390" y="336" width="12" height="8" fill="#2a2a2a"/><rect x="408" y="336" width="12" height="8" fill="#2a2a2a"/>
+        <path d="M436 250 Q446 270 440 300" fill="none" stroke="#444" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="440" cy="302" rx="5" ry="7" fill="#333"/>
+        <ellipse cx="368" cy="250" rx="66" ry="40" fill="#fbfbf8" stroke="#555" stroke-width="2"/>
+        <g clip-path="url(#cowBody)">
+          <ellipse cx="346" cy="232" rx="24" ry="18" fill="#1f1f1f"/>
+          <ellipse cx="398" cy="258" rx="22" ry="16" fill="#1f1f1f"/>
+          <ellipse cx="372" cy="296" rx="14" ry="10" fill="#1f1f1f"/>
+          <ellipse cx="420" cy="228" rx="12" ry="9" fill="#1f1f1f"/>
+        </g>
+        <ellipse cx="362" cy="298" rx="15" ry="9" fill="#f2b8c0" stroke="#b97480" stroke-width="1.5"/>
+        <path d="M312 232 Q306 252 318 272 L336 268 L330 230 Z" fill="#fbfbf8" stroke="#555" stroke-width="2"/>
+        <ellipse cx="312" cy="220" rx="30" ry="25" fill="#fbfbf8" stroke="#555" stroke-width="2"/>
+        <ellipse cx="302" cy="208" rx="13" ry="10" fill="#1f1f1f"/>
+        <ellipse cx="290" cy="232" rx="14" ry="11" fill="#f2b8c0" stroke="#b97480" stroke-width="1.5"/>
+        <circle cx="286" cy="230" r="1.6" fill="#7a4a4a"/><circle cx="294" cy="230" r="1.6" fill="#7a4a4a"/>
+        <ellipse cx="324" cy="200" rx="11" ry="5" fill="#fbfbf8" stroke="#555" stroke-width="1.5" transform="rotate(-25 324 200)"/>
+        <circle cx="314" cy="210" r="3.2" fill="#111"/>
+        <circle cx="315" cy="209" r="1" fill="#fff"/>
+
+        <!-- CỪU (lông xù, mặt và chân đen) -->
+        <ellipse cx="458" cy="322" rx="62" ry="7" fill="#000" opacity=".2"/>
+        <g fill="#2b2b2b">
+          <rect x="436" y="296" width="8" height="28" rx="3"/><rect x="452" y="296" width="8" height="28" rx="3"/>
+          <rect x="468" y="296" width="8" height="28" rx="3"/><rect x="484" y="296" width="8" height="28" rx="3"/>
+        </g>
+        <g fill="url(#gWool)" stroke="#bdb7a6" stroke-width="1">
+          <circle cx="432" cy="268" r="20"/><circle cx="452" cy="252" r="22"/>
+          <circle cx="474" cy="256" r="22"/><circle cx="446" cy="282" r="18"/>
+          <circle cx="470" cy="280" r="20"/><circle cx="420" cy="282" r="14"/>
+        </g>
+        <path d="M466 246 Q476 234 486 246" fill="none" stroke="#bdb7a6" stroke-width="1" opacity=".7"/>
+        <ellipse cx="492" cy="246" rx="17" ry="20" fill="#2b2b2b"/>
+        <circle cx="496" cy="222" r="11" fill="url(#gWool)" stroke="#bdb7a6" stroke-width="1"/>
+        <ellipse cx="480" cy="236" rx="9" ry="4.5" fill="#2b2b2b" transform="rotate(-20 480 236)"/>
+        <circle cx="488" cy="240" r="3" fill="#fff"/><circle cx="488" cy="240" r="1.5" fill="#111"/>
+        <ellipse cx="503" cy="260" rx="5" ry="4" fill="#444"/>
+        <path d="M494 264 Q498 268 503 264" fill="none" stroke="#111" stroke-width="1.2"/>
+
+        <!-- LỢN (hồng, mõm và tai rõ) -->
+        <ellipse cx="248" cy="354" rx="58" ry="7" fill="#000" opacity=".2"/>
+        <path d="M204 310 q-16 -8 -12 -24 q4 -8 10 -2" fill="none" stroke="#e58b9b" stroke-width="3.5" stroke-linecap="round"/>
+        <g fill="#e58b9b" stroke="#a84f63" stroke-width="1.5">
+          <rect x="222" y="330" width="11" height="22" rx="4"/><rect x="238" y="330" width="11" height="22" rx="4"/>
+          <rect x="262" y="330" width="11" height="22" rx="4"/><rect x="278" y="330" width="11" height="22" rx="4"/>
+        </g>
+        <g fill="#7a3c4a">
+          <rect x="222" y="348" width="11" height="5" rx="2"/><rect x="238" y="348" width="11" height="5" rx="2"/>
+          <rect x="262" y="348" width="11" height="5" rx="2"/><rect x="278" y="348" width="11" height="5" rx="2"/>
+        </g>
+        <ellipse cx="236" cy="316" rx="42" ry="28" fill="url(#gPig)" stroke="#a84f63" stroke-width="2"/>
+        <ellipse cx="236" cy="326" rx="30" ry="6" fill="#f7a9b6" opacity=".6"/>
+        <path d="M262 300 Q272 292 282 302 Q284 320 272 322 Z" fill="url(#gPig)" stroke="#a84f63" stroke-width="2"/>
+        <circle cx="284" cy="306" r="22" fill="url(#gPig)" stroke="#a84f63" stroke-width="2"/>
+        <path d="M268 290 L274 270 L290 288 Z" fill="#e58b9b" stroke="#a84f63" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M276 286 Q282 276 294 286" fill="#e58b9b" stroke="#a84f63" stroke-width="1.5" opacity=".0"/>
+        <ellipse cx="306" cy="310" rx="11" ry="9" fill="#f7a0b0" stroke="#a84f63" stroke-width="2"/>
+        <circle cx="303" cy="309" r="2" fill="#a23b55"/><circle cx="309" cy="309" r="2" fill="#a23b55"/>
+        <circle cx="290" cy="298" r="3.2" fill="#222"/>
+        <circle cx="291" cy="297" r="1" fill="#fff"/>
+        <ellipse cx="282" cy="302" rx="4" ry="2.5" fill="#f0a0ae" opacity=".8"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- MÀN HÌNH CHƠI (THỬ THÁCH & NHIỆM VỤ CUỐI) -->
+<section id="s-game" class="screen">
+  <div class="hud">
+    <div class="stat">Điểm: <span id="score">0</span></div>
+    <div class="stat">Mảnh ghép: <span id="pieceCount">0</span>/3</div>
+  </div>
+  <div>
+    <div class="progress"><div id="pBar"></div></div>
+    <div class="ptext" id="pText">Tiến độ: 0/4 thử thách</div>
+  </div>
+  <div class="pieces" id="pieces"></div>
+
+  <div class="stage-head">
+    <div class="tag" id="tag"></div>
+    <h2 id="title"></h2>
+    <p class="situation" id="situation"></p>
+    <p class="hint" id="hint"></p>
+  </div>
+
+  <div id="content"></div>
+  <div class="fb" id="fb"></div>
+
+  <div class="actions">
+    <button class="btn ghost hidden" id="btnRetry">LÀM LẠI</button>
+    <button class="btn alt hidden" id="btnCheck">KIỂM TRA</button>
+    <button class="btn hidden" id="btnNext">TIẾP TỤC</button>
+  </div>
+</section>
+
+<!-- MÀN HÌNH TỔNG KẾT -->
+<section id="s-end" class="screen center">
+  <h1>TỔNG KẾT</h1>
+  <div class="score-big" id="finalScore"></div>
+  <p id="finalMsg"></p>
+  <p id="finalPieces"></p>
+  <div class="big" style="font-size:20px">BẢN ĐỒ: GÀ ĐẺ TRỨNG – BÒ – LỢN ĐÃ ĐƯỢC KHÔI PHỤC</div>
+  <button class="btn" id="btnRestart">LÀM LẠI TRÒ CHƠI</button>
+</section>
+
+</div>
+
+<script>
+// ===== DỮ LIỆU TRÒ CHƠI =====
+const STAGES = [
+  {
+    type:'seq', tag:'THỬ THÁCH 1', title:'KHÔI PHỤC HỒ SƠ TRỨNG',
+    situation:'Hồ sơ dây chuyền thu gom trứng tự động đã bị xáo trộn. Hãy sắp xếp các công đoạn theo đúng trình tự hoạt động.',
+    hint:'Nhấn lần lượt các thẻ theo thứ tự đúng. Nhấn vào ô đã xếp để gỡ thẻ ra.',
+    keys:['A','B','C','D','E'],
+    items:{A:'Đóng gói trứng.',B:'Thu gom trứng.',C:'Phân loại trứng.',D:'Vận chuyển bằng băng tải.',E:'Lưu kho và phân phối.'},
+    answer:'BDCAE', pts:20,
+    okSort:'Chính xác! Dây chuyền bắt đầu từ thu gom trứng, vận chuyển bằng băng tải, phân loại, đóng gói và cuối cùng là lưu kho, phân phối.',
+    wrongSort:'Chưa đúng. Hãy xem lại trình tự hoạt động của dây chuyền thu gom trứng và thử lại.',
+    q:'Những thông tin nào có thể được ghi nhận trong hệ thống quản lí trứng?',
+    opts:['Số lượng, khối lượng và kích thước trứng.','Màu sắc và thời gian đẻ trứng.','Hạn sử dụng của trứng.','Tất cả các thông tin trên.'],
+    correct:3,
+    okMcq:'Chính xác! Hệ thống có thể ghi nhận số lượng, chất lượng, khối lượng, kích thước, màu sắc, thời gian đẻ và hạn sử dụng của trứng. Những dữ liệu này hỗ trợ quản lí sản lượng và chất lượng.',
+    wrongMcq:'Hãy xem lại các thông tin về trứng được ghi nhận trong hệ thống quản lí.',
+    piece:'DÂY CHUYỀN TRỨNG TỰ ĐỘNG'
+  },
+  {
+    type:'cls', tag:'THỬ THÁCH 2', title:'GIẢI MÃ ROBOT',
+    situation:'Hai loại robot trong trang trại bò đang bị nhầm lẫn chức năng. Hãy đưa từng mô tả về đúng loại robot.',
+    hint:'Nhấn một thẻ để chọn, rồi nhấn khu vực tương ứng để đặt. Nhấn thẻ đã đặt để gỡ ra.',
+    keys:['1','2','3','4'],
+    items:{'1':'Tự động cung cấp thức ăn theo chế độ ăn của bò.','2':'Thực hiện hoạt động massage cho bò.','3':'Hỗ trợ công việc phân phối thức ăn trong trang trại.','4':'Hỗ trợ chăm sóc bò thông qua hoạt động massage.'},
+    zones:[{name:'ROBOT CUNG CẤP THỨC ĂN', ans:['1','3']},{name:'ROBOT MASSAGE BÒ', ans:['2','4']}],
+    pts:20,
+    okSort:'Chính xác! Robot cung cấp thức ăn hỗ trợ việc cho ăn, còn robot massage hỗ trợ chăm sóc bò.',
+    wrongSort:'Chưa đúng. Hãy phân biệt lại chức năng của từng loại robot và đặt lại các thẻ.',
+    q:'Việc ứng dụng robot trong chăn nuôi bò có những ý nghĩa nào?',
+    opts:['Giảm bớt lao động thủ công.','Hỗ trợ hoạt động cho ăn và chăm sóc.','Góp phần nâng cao hiệu quả chăn nuôi.','Cả ba ý trên.'],
+    correct:3,
+    okMcq:'Chính xác! Hai loại robot có chức năng khác nhau nhưng đều hỗ trợ hoạt động chăn nuôi, góp phần giảm lao động thủ công và nâng cao hiệu quả.',
+    wrongMcq:'Hãy phân biệt chức năng của robot cung cấp thức ăn và robot massage bò.',
+    piece:'ROBOT TRONG CHĂN NUÔI BÒ'
+  },
+  {
+    type:'seq', tag:'THỬ THÁCH 3', title:'TRUY TÌM DỮ LIỆU',
+    situation:'Hệ thống quản lí đàn lợn bị mất một số thành phần trong sơ đồ. Hãy khôi phục hành trình dữ liệu.',
+    hint:'Nhấn lần lượt các thẻ theo thứ tự hợp lí. Nhấn vào ô đã xếp để gỡ thẻ ra.',
+    keys:['A','B','C','D'],
+    items:{A:'Phân tích dữ liệu bằng dữ liệu lớn và AI.',B:'Tập hợp, truyền thông tin đến thiết bị trung tâm.',C:'Nhận diện cá thể lợn bằng chip điện tử.',D:'Hỗ trợ người chăn nuôi điều chỉnh việc cho ăn, chăm sóc và theo dõi đàn.'},
+    answer:'CBAD', pts:20,
+    okSort:'Chính xác! Chip nhận diện từng cá thể, thông tin được tập hợp về thiết bị trung tâm, AI phân tích, rồi hỗ trợ người chăn nuôi ra quyết định.',
+    wrongSort:'Chưa đúng. Hãy xem lại hành trình dữ liệu: từ nhận diện đến tập hợp, phân tích và hỗ trợ người chăn nuôi.',
+    q:'Chip điện tử được gắn trên tai lợn có vai trò chính nào trong mô hình này?',
+    opts:['Nhận diện từng cá thể lợn.','Tự động điều trị bệnh cho lợn.','Tự đưa ra quyết định chăm sóc.','Thay thế hoàn toàn người chăn nuôi.'],
+    correct:0,
+    okMcq:'Chính xác! Chip điện tử hỗ trợ nhận diện từng cá thể. Thông tin được tập hợp và phân tích để hỗ trợ người chăn nuôi theo dõi, chăm sóc và quản lí đàn.',
+    wrongMcq:'Hãy phân biệt vai trò nhận diện của chip với hoạt động phân tích dữ liệu và quyết định của người chăn nuôi.',
+    piece:'CHIP ĐIỆN TỬ VÀ HỆ THỐNG DỮ LIỆU ĐÀN LỢN'
+  },
+  {
+    type:'cls', final:true, tag:'NHIỆM VỤ CUỐI', title:'BA MÔ HÌNH – BA ỨNG DỤNG CÔNG NGHỆ',
+    situation:'Các nhóm đã thu thập đủ ba mảnh ghép. Tuy nhiên, bản đồ trang trại vẫn còn thiếu thông tin. Hãy ghép đúng chức năng và ý nghĩa với từng mô hình để hoàn thành nhiệm vụ!',
+    hint:'Nhấn một thẻ để chọn, rồi nhấn khu vực tương ứng để đặt. Nhấn thẻ đã đặt để gỡ ra.',
+    keys:['1','2','3','4','5','6','7','8','9'],
+    items:{
+      '1':'Thu gom, vận chuyển, phân loại và đóng gói trứng.',
+      '2':'Hỗ trợ theo dõi số lượng và đặc điểm của trứng.',
+      '3':'Giảm công việc thu gom và hỗ trợ quản lí sản lượng.',
+      '4':'Tự động cung cấp thức ăn theo chế độ ăn của bò.',
+      '5':'Thực hiện massage, hỗ trợ chăm sóc bò.',
+      '6':'Giảm lao động thủ công trong hoạt động cho ăn và chăm sóc.',
+      '7':'Nhận diện từng cá thể lợn bằng chip điện tử.',
+      '8':'Tập hợp và phân tích dữ liệu để theo dõi đàn lợn.',
+      '9':'Hỗ trợ điều chỉnh việc cho ăn, chăm sóc và cảnh báo sớm dấu hiệu bất thường.'
+    },
+    zones:[
+      {name:'CHĂN NUÔI GÀ ĐẺ TRỨNG', ans:['1','2','3']},
+      {name:'CHĂN NUÔI BÒ', ans:['4','5','6']},
+      {name:'CHĂN NUÔI LỢN', ans:['7','8','9']}
+    ],
+    pts:30,
+    okSort:'Chính xác! Bản đồ trang trại công nghệ cao đã được khôi phục đầy đủ.',
+    wrongSort:'Chưa đúng. Hãy kiểm tra lại từng thẻ và đối chiếu với mô hình tương ứng.'
+  }
+];
+
+// ===== TRẠNG THÁI =====
+let S;
+const $ = id => document.getElementById(id);
+const shuffle = a => a.slice().sort(() => Math.random() - 0.5);
+
+function resetState(){
+  S = {score:0, stage:0, step:'sort', seq:[], pool:[], zones:[], sel:null, mcq:null, pieces:[], fb:null, fbOk:null, finalDone:false};
+}
+
+function initStage(){
+  const c = STAGES[S.stage];
+  S.step = 'sort'; S.sel = null; S.mcq = null; S.fb = null; S.fbOk = null;
+  S.seq = [];
+  S.pool = shuffle(c.keys);
+  S.zones = c.zones ? c.zones.map(() => []) : [];
+}
+
+function showScreen(id){
+  ['s-intro','s-game','s-end'].forEach(s => $(s).classList.toggle('active', s === id));
+}
+
+// ===== HIỂN THỊ =====
+function cardCls(c, id, sel){
+  return `<button class="card${sel?' sel':''}" data-card="${id}"><b>Thẻ ${id}</b><span>${c.items[id]}</span></button>`;
+}
+
+function boardHTML(c, locked){
+  const pool = S.pool.length
+    ? S.pool.map(id => cardCls(c, id, S.sel === id)).join('')
+    : '<em>Đã đặt hết các thẻ.</em>';
+  return `<div class="${locked?'locked':''}">
+    <div class="label">Các thẻ chưa đặt:</div>
+    <div class="row">${pool}</div>
+    <div class="zones" style="margin-top:12px">
+      ${c.zones.map((z,i)=>`
+        <div class="zone" data-zone="${i}">
+          <h3>${z.name}</h3>
+          <div class="zrow">${S.zones[i].map(id=>cardCls(c,id,false)).join('')}</div>
+          <div class="cap">${S.zones[i].length}/${z.ans.length} thẻ</div>
+        </div>`).join('')}
+    </div></div>`;
+}
+
+function seqHTML(c, locked){
+  const slots = c.keys.map((_,i)=>{
+    const k = S.seq[i];
+    return k
+      ? `<button class="slot filled" data-unpick="${i}"><span class="num">${i+1}</span><span>${c.items[k]}</span></button>`
+      : `<div class="slot"><span class="num">${i+1}</span></div>`;
+  }).join('');
+  const pool = S.pool.map(k => `<button class="card" data-pick="${k}"><b>${k}.</b><span>${c.items[k]}</span></button>`).join('');
+  return `<div class="${locked?'locked':''}">
+    <div class="label">Trình tự đã xếp:</div>
+    <div class="slots">${slots}</div>
+    <div class="label" style="margin-top:12px">Các thẻ chưa xếp:</div>
+    <div class="row">${pool || '<em>Đã xếp hết các thẻ.</em>'}</div></div>`;
+}
+
+function mcqHTML(c, locked){
+  return `<div class="q ${locked?'locked':''}">
+    <p class="qtext">${c.q}</p>
+    ${c.opts.map((o,i)=>`<button class="opt${S.mcq===i?' sel':''}" data-opt="${i}"><b>${'ABCD'[i]}.</b><span>${o}</span></button>`).join('')}
+  </div>`;
+}
+
+function treeHTML(){
+  return `<div class="tree">CHĂN NUÔI CÔNG NGHỆ CAO
+├── <b>GÀ ĐẺ TRỨNG</b>: Thu gom – phân loại – đóng gói – quản lí dữ liệu.
+├── <b>BÒ</b>: Robot cung cấp thức ăn – robot massage.
+└── <b>LỢN</b>: Chip nhận diện – thu thập dữ liệu – dữ liệu lớn và AI phân tích.</div>`;
+}
+
+function setFb(){
+  const fb = $('fb');
+  if(!S.fb){ fb.className = 'fb'; fb.innerHTML=''; return; }
+  fb.className = 'fb show ' + (S.fbOk === true ? 'ok' : S.fbOk === false ? 'bad' : 'info');
+  fb.innerHTML = S.fb;
+}
+
+function render(){
+  const c = STAGES[S.stage];
+  const done = S.finalDone ? 4 : S.stage;
+  $('pBar').style.width = (done/4*100) + '%';
+  $('pText').textContent = `Tiến độ: ${done}/4 thử thách`;
+  $('score').textContent = S.score;
+  $('pieceCount').textContent = S.pieces.length;
+  $('pieces').innerHTML = [0,1,2].map(i =>
+    `<div class="piece ${S.pieces[i]?'got':''}">${S.pieces[i] ? '🧩 ' + S.pieces[i] : 'Mảnh ghép ' + (i+1) + ' – chưa mở'}</div>`).join('');
+
+  $('tag').textContent = c.tag;
+  $('title').textContent = c.title;
+  $('situation').textContent = c.situation;
+  $('hint').textContent = (S.step === 'sort') ? c.hint : '';
+
+  // Hoàn thành nhiệm vụ cuối
+  if(S.step === 'done'){
+    $('content').innerHTML = treeHTML();
+    $('situation').textContent = 'Bản đồ trang trại đã được khôi phục hoàn chỉnh.';
+    $('hint').textContent = '';
+    S.fb = 'CHÚC MỪNG! BẠN ĐÃ KHÔI PHỤC THÀNH CÔNG BẢN ĐỒ TRANG TRẠI CÔNG NGHỆ CAO!';
+    S.fbOk = true;
+  }
+
+  let html = '';
+  if(S.step === 'sort' || S.step === 'sortOk'){
+    const locked = S.step === 'sortOk';
+    html = c.type === 'seq' ? seqHTML(c, locked) : boardHTML(c, locked);
+  } else if(S.step === 'mcq' || S.step === 'mcqOk'){
+    const locked = S.step === 'mcqOk';
+    html = (c.type === 'seq' ? seqHTML(c, true) : boardHTML(c, true)) + mcqHTML(c, locked);
+  }
+  if(S.step !== 'done') $('content').innerHTML = html; else $('content').innerHTML = treeHTML();
+
+  setFb();
+
+  const s = S.step;
+  $('btnRetry').classList.toggle('hidden', s !== 'sort');
+  $('btnCheck').classList.toggle('hidden', !(s === 'sort' || s === 'mcq'));
+  $('btnNext').classList.toggle('hidden', !(s === 'sortOk' || s === 'mcqOk' || s === 'done'));
+  $('btnNext').textContent = s === 'done' ? 'XEM TỔNG KẾT' : 'TIẾP TỤC';
+}
+
+// ===== XỬ LÝ TƯƠNG TÁC =====
+$('content').addEventListener('click', e => {
+  const c = STAGES[S.stage];
+  if(S.step === 'mcq'){
+    const o = e.target.closest('[data-opt]');
+    if(o){ S.mcq = +o.dataset.opt; S.fb = null; render(); }
+    return;
+  }
+  if(S.step !== 'sort') return;
+
+  if(c.type === 'seq'){
+    const p = e.target.closest('[data-pick]');
+    const u = e.target.closest('[data-unpick]');
+    if(p){
+      const k = p.dataset.pick;
+      S.seq.push(k); S.pool = S.pool.filter(x => x !== k);
+    } else if(u){
+      const k = S.seq.splice(+u.dataset.unpick, 1)[0];
+      S.pool.push(k);
+    } else return;
+  } else {
+    const cd = e.target.closest('[data-card]');
+    const z = e.target.closest('[data-zone]');
+    if(cd){
+      const id = cd.dataset.card;
+      if(S.pool.includes(id)){
+        S.sel = (S.sel === id) ? null : id;
+      } else {
+        S.zones.forEach(zz => { const i = zz.indexOf(id); if(i > -1) zz.splice(i,1); });
+        S.pool.push(id); S.sel = null;
+      }
+    } else if(z){
+      const zi = +z.dataset.zone;
+      if(S.sel === null){
+        S.fb = 'Hãy chọn một thẻ trước khi đặt vào khu vực.'; S.fbOk = false;
+      } else if(S.zones[zi].length >= c.zones[zi].ans.length){
+        S.fb = 'Khu vực này đã đủ thẻ.'; S.fbOk = false;
+      } else {
+        S.zones[zi].push(S.sel);
+        S.pool = S.pool.filter(x => x !== S.sel);
+        S.sel = null; S.fb = null;
+      }
+    } else return;
+  }
+  render();
+});
+
+function check(){
+  const c = STAGES[S.stage];
+  if(S.step === 'sort'){
+    let ok;
+    if(c.type === 'seq'){
+      ok = S.seq.join('') === c.answer;
+    } else {
+      ok = S.pool.length === 0 && c.zones.every((z,i) =>
+        S.zones[i].length === z.ans.length && z.ans.every(x => S.zones[i].includes(x)));
+    }
+    if(ok){
+      S.score += c.pts;
+      S.fb = c.okSort; S.fbOk = true;
+      if(c.final){ S.finalDone = true; S.step = 'done'; }
+      else S.step = 'sortOk';
+    } else {
+      if(c.type === 'cls' && S.pool.length){
+        S.fb = 'Bạn chưa đặt hết các thẻ vào khu vực.';
+      } else {
+        S.fb = c.wrongSort;
+      }
+      S.fbOk = false;
+    }
+  } else if(S.step === 'mcq'){
+    if(S.mcq === null){
+      S.fb = 'Hãy chọn một phương án trước khi kiểm tra.'; S.fbOk = false;
+    } else if(S.mcq === c.correct){
+      S.score += 10;
+      S.pieces.push(c.piece);
+      S.fb = c.okMcq + `<br><b>🧩 Bạn đã nhận mảnh ghép: ${c.piece}</b>`;
+      S.fbOk = true; S.step = 'mcqOk';
+    } else {
+      S.fb = c.wrongMcq; S.fbOk = false; S.mcq = null;
+    }
+  }
+  render();
+}
+
+function retry(){
+  const c = STAGES[S.stage];
+  S.seq = [];
+  S.pool = shuffle(c.keys);
+  S.zones = c.zones ? c.zones.map(() => []) : [];
+  S.sel = null; S.fb = null; S.fbOk = null;
+  render();
+}
+
+function next(){
+  if(S.step === 'sortOk'){
+    S.step = 'mcq'; S.fb = null; S.fbOk = null;
+    render();
+  } else if(S.step === 'mcqOk'){
+    S.stage++;
+    initStage();
+    render();
+  } else if(S.step === 'done'){
+    showEnd();
+  }
+}
+
+function showEnd(){
+  const max = 120;
+  $('finalScore').textContent = `${S.score} / ${max} điểm`;
+  let msg = S.score >= 100 ? 'Xuất sắc! Bạn đã nắm vững ba mô hình chăn nuôi công nghệ cao.'
+          : S.score >= 60 ? 'Tốt! Hãy ôn lại phần chức năng và ý nghĩa của từng mô hình.'
+          : 'Hãy xem lại nội dung bài học và thử lại để hoàn thiện bản đồ.';
+  $('finalMsg').textContent = msg;
+  $('finalPieces').textContent = `Bạn đã thu thập ${S.pieces.length}/3 mảnh ghép.`;
+  showScreen('s-end');
+}
+
+$('btnStart').addEventListener('click', () => {
+  resetState(); initStage(); showScreen('s-game'); render();
+});
+$('btnCheck').addEventListener('click', check);
+$('btnRetry').addEventListener('click', retry);
+$('btnNext').addEventListener('click', next);
+$('btnRestart').addEventListener('click', () => {
+  resetState(); showScreen('s-intro');
+});
+
+resetState();
+</script>
+</body>
+</html>
